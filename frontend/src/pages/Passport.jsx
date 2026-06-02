@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import OverviewCard from '../components/passport/OverviewCard'
 import HealthTimeline from '../components/passport/HealthTimeline'
@@ -6,10 +6,20 @@ import UploadModal from '../components/passport/UploadModal'
 import { Button } from '../components/ui/Button'
 import { Plus, ActivitySquare, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useRecordsStore } from '../store/recordsStore'
+import { useUserStore } from '../store/userStore'
 
 export default function Passport() {
   const [isUploadOpen, setIsUploadOpen] = useState(false)
   const navigate = useNavigate()
+  
+  const fetchRecords = useRecordsStore(s => s.fetchRecords)
+  const fetchProfile = useUserStore(s => s.fetchProfile)
+  
+  useEffect(() => {
+    fetchRecords()
+    fetchProfile()
+  }, [fetchRecords, fetchProfile])
 
   return (
     <div className="py-6 space-y-8">

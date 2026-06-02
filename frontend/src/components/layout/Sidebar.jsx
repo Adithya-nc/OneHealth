@@ -1,13 +1,14 @@
 import React from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, BookHeart, Stethoscope, FileSearch,
   Pill, Activity, BarChart3, FileText, Settings,
   UserCog, ShieldCheck, ChevronLeft, ChevronRight,
-  AlertTriangle, HeartPulse
+  AlertTriangle, HeartPulse, LogOut
 } from 'lucide-react'
 import { useUIStore } from '../../store/uiStore'
+import { useAuthStore } from '../../store/authStore'
 import { cn } from '../../utils/formatters'
 
 const PATIENT_NAV = [
@@ -71,6 +72,13 @@ function NavItem({ item, collapsed }) {
 export function Sidebar() {
   const collapsed = useUIStore(s => s.sidebarCollapsed)
   const toggleSidebar = useUIStore(s => s.toggleSidebar)
+  const logout = useAuthStore(s => s.logout)
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
   return (
     <motion.aside
@@ -131,6 +139,18 @@ export function Sidebar() {
           <Settings size={18} />
           {!collapsed && <span>Settings</span>}
         </NavLink>
+
+        <button
+          onClick={handleLogout}
+          className={cn(
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+            'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)] hover:text-red-500',
+            collapsed && 'justify-center px-0'
+          )}
+        >
+          <LogOut size={18} />
+          {!collapsed && <span>Sign Out</span>}
+        </button>
       </nav>
 
       {/* Collapse Toggle */}

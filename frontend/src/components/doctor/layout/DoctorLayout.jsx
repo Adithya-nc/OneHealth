@@ -174,15 +174,19 @@ export function DoctorLayout() {
         </header>
 
         {/* Page Content with Transition */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-slate-950">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-slate-950 relative">
+          {/* Background glowing orb decorations */}
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[100px] pointer-events-none z-0" />
+          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[90px] pointer-events-none z-0" />
+          
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="h-full max-w-7xl mx-auto"
+              initial={{ opacity: 0, scale: 0.98, filter: 'blur(8px)', y: 15 }}
+              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)', y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, filter: 'blur(8px)', y: -15 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="h-full max-w-7xl mx-auto relative z-10"
             >
               <Outlet />
             </motion.div>

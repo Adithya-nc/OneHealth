@@ -1,8 +1,9 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
-import { Bell, Sun, Moon, Monitor, Search, AlertTriangle } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Bell, Sun, Moon, Monitor, Search, AlertTriangle, LogOut } from 'lucide-react'
 import { useUIStore, applyTheme } from '../../store/uiStore'
 import { useUserStore } from '../../store/userStore'
+import { useAuthStore } from '../../store/authStore'
 import { Avatar } from '../ui/index'
 import { Button } from '../ui/Button'
 import { cn } from '../../utils/formatters'
@@ -40,7 +41,14 @@ export function Header({ title, subtitle }) {
   const profile = useUserStore(s => s.profile)
   const healthMetrics = useUserStore(s => s.healthMetrics)
   const notificationCount = useUIStore(s => s.notificationCount)
+  const logout = useAuthStore(s => s.logout)
+  const navigate = useNavigate()
   const score = healthMetrics?.health_score || 0
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
   const scoreColor = score >= 70 ? 'text-emerald-600' : score >= 40 ? 'text-amber-600' : 'text-red-600'
   const scoreBg   = score >= 70 ? 'bg-emerald-50'    : score >= 40 ? 'bg-amber-50'    : 'bg-red-50'
@@ -90,6 +98,15 @@ export function Header({ title, subtitle }) {
         <Link to="/settings">
           <Avatar name={profile?.name || 'User'} src={profile?.profile?.photo_url} size="sm" />
         </Link>
+
+        {/* Sign Out (Mobile) */}
+        <button 
+          onClick={handleLogout}
+          className="md:hidden relative p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-red-50 hover:text-red-600 transition-colors" 
+          aria-label="Sign Out"
+        >
+          <LogOut size={18} />
+        </button>
       </div>
     </header>
   )

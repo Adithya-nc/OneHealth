@@ -12,7 +12,7 @@ import {
   Syringe,
   Building
 } from 'lucide-react'
-import { Card, Button, Badge } from '../../components/ui'
+import { Card, GlassCard, Button, Badge } from '../../components/ui'
 import { MedicalTimeline } from '../../components/doctor/passport/MedicalTimeline'
 import { ReportReviewModule } from '../../components/doctor/passport/ReportReviewModule'
 
@@ -49,7 +49,7 @@ export function PatientPassport() {
         <Button variant="ghost" className="text-slate-500" onClick={() => navigate('/doctor/patients')}>
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Directory
         </Button>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => navigate(`/doctor/consultation/${id}`)}>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20" onClick={() => navigate(`/doctor/consultation/${id}`)}>
           Start Consultation
         </Button>
       </div>
@@ -58,8 +58,9 @@ export function PatientPassport() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 100, damping: 15 }}
       >
-        <Card className="p-0 overflow-hidden border-0 shadow-md bg-white dark:bg-slate-900 rounded-3xl">
+        <GlassCard className="p-0 overflow-hidden border-0 shadow-md">
           
           <div className="p-8 flex flex-col md:flex-row gap-8 items-start relative">
             {/* Background Accent */}
@@ -129,7 +130,7 @@ export function PatientPassport() {
             </div>
           </div>
 
-        </Card>
+        </GlassCard>
       </motion.div>
 
       {/* Main Content Split */}
@@ -137,27 +138,27 @@ export function PatientPassport() {
         
         {/* Left Column: Timeline */}
         <div className="lg:col-span-2 space-y-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, type: "spring", stiffness: 100, damping: 15 }}>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-blue-600" /> Medical Timeline
             </h3>
-            <Card className="p-6 border-0 shadow-sm bg-white dark:bg-slate-900">
+            <GlassCard className="p-6">
               <MedicalTimeline />
-            </Card>
+            </GlassCard>
           </motion.div>
         </div>
 
         {/* Right Column: Report Viewer & Quick Actions */}
         <div className="space-y-6">
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, type: "spring", stiffness: 100, damping: 15 }}>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5 text-indigo-600" /> Recent Reports
             </h3>
             <ReportReviewModule />
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
-             <Card className="p-6 border-0 shadow-sm bg-white dark:bg-slate-900">
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4, type: "spring", stiffness: 100, damping: 15 }}>
+             <GlassCard className="p-6">
                <h4 className="font-bold text-slate-900 dark:text-white mb-4">Quick Stats</h4>
                <div className="space-y-4">
                  <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
@@ -169,7 +170,7 @@ export function PatientPassport() {
                    <span className="font-bold text-slate-900 dark:text-white">Oct 2024</span>
                  </div>
                </div>
-             </Card>
+             </GlassCard>
           </motion.div>
         </div>
 

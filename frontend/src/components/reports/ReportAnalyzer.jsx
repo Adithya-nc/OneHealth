@@ -6,12 +6,13 @@ import {
   Minus, Sparkles, Download, Save, RotateCcw, ChevronRight
 } from 'lucide-react'
 import { Button } from '../ui/Button'
+import { GlassCard } from '../ui/Card'
 import { Alert, ProgressBar } from '../ui/index'
 import { useRecordsStore } from '../../store/recordsStore'
 import { useToast } from '../ui/Toast'
 import { cn } from '../../utils/formatters'
 
-const STEPS = ['Uploading', 'Extracting Text', 'Analyzing Values', 'Generating Summary']
+const STEPS = ['Uploading Record', 'Extracting Telemetry', 'Comparing Bio-Markers', 'Compiling AI Summary']
 
 const MOCK_ANALYSIS = {
   report_type: 'Complete Blood Count (CBC)',
@@ -34,10 +35,10 @@ const MOCK_ANALYSIS = {
 }
 
 const statusIcons = {
-  normal:   { icon: <Minus size={12} />,      color: 'bg-emerald-100 text-emerald-700' },
-  high:     { icon: <TrendingUp size={12} />,  color: 'bg-red-100 text-red-700' },
-  low:      { icon: <TrendingDown size={12} />, color: 'bg-blue-100 text-blue-700' },
-  critical: { icon: <TrendingUp size={12} />,  color: 'bg-red-200 text-red-900' },
+  normal:   { icon: <Minus size={12} />,      color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' },
+  high:     { icon: <TrendingUp size={12} />,  color: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400' },
+  low:      { icon: <TrendingDown size={12} />, color: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' },
+  critical: { icon: <TrendingUp size={12} />,  color: 'bg-red-200 text-red-900 dark:bg-red-900/20 dark:text-red-400' },
 }
 
 export default function ReportAnalyzer() {
@@ -90,19 +91,30 @@ export default function ReportAnalyzer() {
   }
 
   return (
-    <div className="page-container py-6 space-y-6 max-w-4xl mx-auto">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-[var(--color-primary)] mb-4">
+    <div className="page-container py-6 space-y-6 max-w-4xl mx-auto relative z-10">
+      <div className="text-center mb-8">
+        <motion.div 
+          animate={{ rotate: [0, 10, -10, 0] }}
+          transition={{ repeat: Infinity, duration: 4 }}
+          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 mb-4 shadow-lg shadow-purple-500/20"
+        >
           <Sparkles size={28} className="text-white" />
-        </div>
+        </motion.div>
         <h1 className="text-3xl font-black text-[var(--color-text-primary)]">AI Report Analyzer</h1>
-        <p className="text-[var(--color-text-secondary)] mt-1">Upload a medical report and get an instant AI-powered plain-language summary.</p>
+        <p className="text-[var(--color-text-secondary)] mt-1.5 max-w-md mx-auto text-sm">Upload diagnostic medical records. The parser identifies variables and details them immediately.</p>
       </div>
 
       <AnimatePresence mode="wait">
         {step === 'upload' && (
-          <motion.div key="upload" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="space-y-5">
-            {/* Report Type */}
+          <motion.div 
+            key="upload" 
+            initial={{ opacity: 0, scale: 0.98, y: 15 }} 
+            animate={{ opacity: 1, scale: 1, y: 0 }} 
+            exit={{ opacity: 0, scale: 0.98, y: -15 }} 
+            transition={{ duration: 0.4 }}
+            className="space-y-6"
+          >
+            {/* Report Type Selector */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { id: 'report',        label: 'Blood Test' },
@@ -110,87 +122,106 @@ export default function ReportAnalyzer() {
                 { id: 'prescription',  label: 'Prescription' },
                 { id: 'other',         label: 'Other' },
               ].map(t => (
-                <button
+                <motion.button
                   key={t.id}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setReportType(t.id)}
                   className={cn(
-                    'p-3 rounded-xl border text-sm font-medium transition-all',
+                    'p-3.5 rounded-xl border text-xs font-bold transition-all duration-300',
                     reportType === t.id
-                      ? 'border-[var(--color-primary)] bg-blue-50 text-[var(--color-primary)]'
-                      : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]'
+                      ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-md shadow-blue-500/5'
+                      : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:border-slate-300'
                   )}
                 >
                   {t.label}
-                </button>
+                </motion.button>
               ))}
             </div>
 
-            {/* Dropzone */}
-            <div
+            {/* Drag and Drop Zone */}
+            <motion.div
               {...getRootProps()}
+              whileHover={{ scale: 1.01 }}
               className={cn(
-                'rounded-2xl border-2 border-dashed p-12 text-center cursor-pointer transition-all',
-                isDragActive ? 'border-[var(--color-primary)] bg-blue-50' :
-                files.length ? 'border-emerald-400 bg-emerald-50' :
-                'border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-2)]'
+                'rounded-3xl border-2 border-dashed p-12 text-center cursor-pointer transition-all duration-300 relative overflow-hidden',
+                isDragActive ? 'border-blue-500 bg-blue-500/5' :
+                files.length ? 'border-emerald-500 bg-emerald-500/5' :
+                'border-[var(--color-border)] hover:border-blue-500/50 hover:bg-[var(--color-surface-2)]/60'
               )}
             >
               <input {...getInputProps()} />
               {files.length ? (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center">
-                    <FileText size={32} className="text-emerald-600" />
+                <motion.div 
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="flex flex-col items-center gap-4"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center shadow-md">
+                    <FileText size={32} className="text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <p className="font-bold text-[var(--color-text-primary)]">{files[0].name}</p>
-                    <p className="text-sm text-[var(--color-text-muted)]">{(files[0].size / 1024).toFixed(0)} KB · Ready to analyze</p>
+                    <p className="font-bold text-[var(--color-text-primary)] text-base">{files[0].name}</p>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1 font-semibold">{(files[0].size / 1024).toFixed(0)} KB · Ready to analyze</p>
                   </div>
-                </div>
+                </motion.div>
               ) : (
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-20 h-20 rounded-2xl bg-[var(--color-surface-2)] flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-2xl bg-[var(--color-surface-2)] flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
                     <UploadCloud size={36} className="text-[var(--color-text-muted)]" />
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-[var(--color-text-primary)]">{isDragActive ? 'Drop your file here' : 'Drag & Drop or Click to Upload'}</p>
-                    <p className="text-sm text-[var(--color-text-muted)] mt-1">PDF, JPG, PNG · Max 20 MB</p>
+                    <p className="text-base font-black text-[var(--color-text-primary)]">{isDragActive ? 'Release the file now' : 'Drag & Drop Medical Report'}</p>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1.5 font-medium">Supports PDF, JPG, PNG up to 20 MB</p>
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
 
-            <Button
-              onClick={handleAnalyze}
-              className="w-full h-14 text-lg font-bold"
-              disabled={files.length === 0}
-              leftIcon={<Sparkles size={20} />}
-            >
-              Analyze Report with AI
-            </Button>
+            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+              <Button
+                onClick={handleAnalyze}
+                className="w-full h-14 text-base font-bold shadow-xl shadow-blue-500/10 hover:shadow-2xl hover:shadow-blue-500/20"
+                disabled={files.length === 0}
+                leftIcon={<Sparkles size={18} />}
+              >
+                Analyze Report with AI
+              </Button>
+            </motion.div>
           </motion.div>
         )}
 
         {step === 'processing' && (
-          <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-16 space-y-8">
-            <div className="flex justify-center">
-              <div className="relative w-24 h-24">
-                <div className="absolute inset-0 rounded-full border-4 border-[var(--color-surface-2)]" />
-                <div className="absolute inset-0 rounded-full border-4 border-purple-500 border-t-transparent animate-spin" />
-                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-purple-500 to-[var(--color-primary)] flex items-center justify-center">
-                  <Sparkles size={24} className="text-white" />
-                </div>
+          <motion.div 
+            key="processing" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="py-16 space-y-8 flex flex-col items-center"
+          >
+            <div className="relative w-24 h-24">
+              <div className="absolute inset-0 rounded-full border-4 border-slate-100 dark:border-slate-800" />
+              <div className="absolute inset-0 rounded-full border-4 border-purple-500 border-t-transparent animate-spin" />
+              <div className="absolute inset-2.5 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg">
+                <Sparkles size={24} className="text-white animate-pulse" />
               </div>
             </div>
-            <div className="max-w-sm mx-auto space-y-4">
+            <div className="max-w-md w-full space-y-5">
               <ProgressBar value={progress} color="primary" showPercent />
-              <div className="space-y-2">
+              <div className="space-y-3 bg-[var(--color-surface)]/60 backdrop-blur-md border border-[var(--color-border)] rounded-2xl p-5">
                 {STEPS.map((s, i) => (
-                  <div key={i} className={cn('flex items-center gap-3 text-sm transition-all', i <= currentStep ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]')}>
-                    <div className={cn('w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0', i < currentStep ? 'bg-emerald-500' : i === currentStep ? 'bg-[var(--color-primary)] animate-pulse' : 'bg-[var(--color-surface-2)]')}>
-                      {i < currentStep ? <Check size={10} className="text-white" /> : <span className="text-[10px] text-white font-bold">{i + 1}</span>}
+                  <motion.div 
+                    key={i} 
+                    initial={{ x: -10, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: i * 0.1 }}
+                    className={cn('flex items-center gap-3 text-xs font-bold transition-all', i <= currentStep ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]')}
+                  >
+                    <div className={cn('w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors', i < currentStep ? 'bg-emerald-500 text-white' : i === currentStep ? 'bg-purple-600 text-white' : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)]')}>
+                      {i < currentStep ? <Check size={12} /> : <span className="font-bold">{i + 1}</span>}
                     </div>
                     {s}
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -198,76 +229,104 @@ export default function ReportAnalyzer() {
         )}
 
         {step === 'results' && result && (
-          <motion.div key="results" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            {/* Summary Card */}
-            <div className="rounded-2xl bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 p-6">
+          <motion.div 
+            key="results" 
+            initial={{ opacity: 0, scale: 0.98, y: 15 }} 
+            animate={{ opacity: 1, scale: 1, y: 0 }} 
+            transition={{ duration: 0.4 }}
+            className="space-y-6"
+          >
+            {/* Summary GlassCard */}
+            <GlassCard className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20 p-6 relative">
+              {/* Highlight overlay */}
+              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none" />
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={18} className="text-purple-600" />
-                <h3 className="font-bold text-lg text-[var(--color-text-primary)]">AI Summary — {result.report_type}</h3>
+                <Sparkles size={18} className="text-purple-600 animate-pulse" />
+                <h3 className="font-black text-lg text-[var(--color-text-primary)]">AI Summary — {result.report_type}</h3>
               </div>
-              <p className="text-[var(--color-text-primary)] leading-relaxed">{result.overall_summary}</p>
+              <p className="text-[var(--color-text-primary)] leading-relaxed text-sm font-medium">{result.overall_summary}</p>
               {result.abnormal_findings?.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
                   {result.abnormal_findings.map((f, i) => (
-                    <span key={i} className="text-xs font-semibold px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full">⚠ {f}</span>
+                    <motion.span 
+                      key={i} 
+                      whileHover={{ scale: 1.05 }}
+                      className="text-[10px] font-bold px-3 py-1 bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400 rounded-full border border-amber-200/35 dark:border-amber-500/10"
+                    >
+                      ⚠ {f}
+                    </motion.span>
                   ))}
                 </div>
               )}
-            </div>
+            </GlassCard>
 
-            {/* Extracted Values Table */}
-            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
-              <div className="px-5 py-4 border-b border-[var(--color-border)]">
-                <h3 className="font-bold text-lg text-[var(--color-text-primary)]">Extracted Values</h3>
+            {/* Extracted Values Table in GlassCard */}
+            <GlassCard className="p-0 border border-[var(--color-border)]/60 overflow-hidden shadow-xl">
+              <div className="px-5 py-4 border-b border-[var(--color-border)]/50">
+                <h3 className="font-black text-base text-[var(--color-text-primary)]">Extracted Parameter Telemetry</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-[var(--color-surface-2)]">
+                  <thead className="bg-[var(--color-surface-2)]/60 text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
                     <tr>
-                      {['Parameter', 'Your Value', 'Reference Range', 'Status', 'What it means'].map(h => (
-                        <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">{h}</th>
+                      {['Parameter', 'Your Value', 'Reference Range', 'Status', 'Explanation'].map(h => (
+                        <th key={h} className="px-5 py-3.5 text-left font-bold">{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[var(--color-border)]">
+                  <tbody className="divide-y divide-[var(--color-border)]/50 text-[var(--color-text-primary)]">
                     {result.extracted_values.map((v, i) => {
                       const s = statusIcons[v.status] || statusIcons.normal
                       return (
-                        <tr key={i} className={cn('hover:bg-[var(--color-surface-2)] transition-colors', v.status !== 'normal' ? 'bg-amber-50/50' : '')}>
-                          <td className="px-4 py-3 font-semibold text-[var(--color-text-primary)]">{v.parameter}</td>
-                          <td className="px-4 py-3 font-mono font-bold text-[var(--color-text-primary)]">{v.value} {v.unit}</td>
-                          <td className="px-4 py-3 text-[var(--color-text-secondary)]">{v.reference_range}</td>
-                          <td className="px-4 py-3">
-                            <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold', s.color)}>
-                              {s.icon} {v.status.charAt(0).toUpperCase() + v.status.slice(1)}
+                        <motion.tr 
+                          key={i} 
+                          whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)' }}
+                          className={cn('transition-colors', v.status !== 'normal' ? 'bg-amber-500/[0.02]' : '')}
+                        >
+                          <td className="px-5 py-4 font-bold text-sm">{v.parameter}</td>
+                          <td className="px-5 py-4 font-data font-bold text-sm">{v.value} <span className="text-xs text-[var(--color-text-muted)] font-normal">{v.unit}</span></td>
+                          <td className="px-5 py-4 text-xs font-medium text-[var(--color-text-secondary)]">{v.reference_range}</td>
+                          <td className="px-5 py-4">
+                            <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm', s.color)}>
+                              {s.icon} <span className="uppercase text-[9px] tracking-wider font-black">{v.status}</span>
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-xs text-[var(--color-text-secondary)] max-w-xs">{v.plain_explanation}</td>
-                        </tr>
+                          <td className="px-5 py-4 text-xs text-[var(--color-text-secondary)] font-medium max-w-xs leading-relaxed">{v.plain_explanation}</td>
+                        </motion.tr>
                       )
                     })}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </GlassCard>
 
             {/* Suggested Actions */}
-            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-              <h3 className="font-bold text-lg text-[var(--color-text-primary)] mb-4">Suggested Actions</h3>
+            <GlassCard>
+              <h3 className="font-black text-base text-[var(--color-text-primary)] mb-4">Suggested Actions</h3>
               <ol className="space-y-3">
                 {result.suggested_actions.map((a, i) => (
-                  <li key={i} className="flex gap-3 text-sm text-[var(--color-text-primary)]">
-                    <span className="w-6 h-6 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center flex-shrink-0 font-bold text-xs">{i + 1}</span>
+                  <motion.li 
+                    key={i} 
+                    whileHover={{ x: 2 }}
+                    className="flex gap-3 text-sm text-[var(--color-text-secondary)] font-medium leading-relaxed"
+                  >
+                    <span className="w-6 h-6 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center flex-shrink-0 font-bold text-xs mt-0.5">{i + 1}</span>
                     {a}
-                  </li>
+                  </motion.li>
                 ))}
               </ol>
-            </div>
+            </GlassCard>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button className="flex-1" leftIcon={<Save size={16} />} onClick={handleSave}>Save to Passport</Button>
-              <Button variant="outline" className="flex-1" leftIcon={<Download size={16} />}>Download PDF Summary</Button>
-              <Button variant="outline" leftIcon={<RotateCcw size={16} />} onClick={handleReset}>Analyze Another</Button>
+            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+              <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button className="w-full h-12 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300" leftIcon={<Save size={16} />} onClick={handleSave}>Save to Passport</Button>
+              </motion.div>
+              <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button variant="outline" className="w-full h-12" leftIcon={<Download size={16} />}>Download PDF Summary</Button>
+              </motion.div>
+              <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button variant="outline" className="w-full h-12" leftIcon={<RotateCcw size={16} />} onClick={handleReset}>Analyze Another</Button>
+              </motion.div>
             </div>
           </motion.div>
         )}

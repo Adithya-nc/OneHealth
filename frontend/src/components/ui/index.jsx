@@ -1,44 +1,97 @@
-import React from 'react'
-import { motion } from 'framer-motion'
+import React, { useRef } from 'react'
+import { motion, useMotionValue, useTransform } from 'framer-motion'
 import { cn } from '../../utils/formatters'
 
-// Animated counter with Framer Motion
+// Premium 3D StatCard
 export function StatCard({ icon, label, value, trend, trendLabel, color = 'primary', className, onClick }) {
+  const cardRef = useRef(null)
+  
+  // 3D Hover tilt calculations
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+
+  const rotateX = useTransform(y, [-100, 100], [7, -7])
+  const rotateY = useTransform(x, [-100, 100], [-7, 7])
+
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    const width = rect.width
+    const height = rect.height
+    const mouseX = e.clientX - rect.left - width / 2
+    const mouseY = e.clientY - rect.top - height / 2
+    x.set(mouseX)
+    y.set(mouseY)
+  }
+
+  const handleMouseLeave = () => {
+    x.set(0)
+    y.set(0)
+  }
+
   const colorMap = {
-    primary: { bg: 'bg-blue-50', icon: 'text-[var(--color-primary)]', text: 'text-[var(--color-primary)]' },
-    success: { bg: 'bg-emerald-50', icon: 'text-emerald-600', text: 'text-emerald-600' },
-    warning: { bg: 'bg-amber-50',  icon: 'text-amber-600',  text: 'text-amber-600' },
-    danger:  { bg: 'bg-red-50',    icon: 'text-red-600',    text: 'text-red-600' },
-    purple:  { bg: 'bg-purple-50', icon: 'text-purple-600', text: 'text-purple-600' },
-    orange:  { bg: 'bg-orange-50', icon: 'text-orange-600', text: 'text-orange-600' },
+    primary: { bg: 'bg-blue-50 dark:bg-blue-500/10', icon: 'text-[var(--color-primary)]', text: 'text-[var(--color-primary)]', glow: 'hover:shadow-[0_15px_30px_rgba(26,86,219,0.15)] hover:border-blue-500/30' },
+    success: { bg: 'bg-emerald-50 dark:bg-emerald-500/10', icon: 'text-emerald-600', text: 'text-emerald-600', glow: 'hover:shadow-[0_15px_30px_rgba(14,159,110,0.15)] hover:border-emerald-500/30' },
+    warning: { bg: 'bg-amber-50 dark:bg-amber-500/10',  icon: 'text-amber-600',  text: 'text-amber-600', glow: 'hover:shadow-[0_15px_30px_rgba(217,119,6,0.15)] hover:border-amber-500/30' },
+    danger:  { bg: 'bg-red-50 dark:bg-red-500/10',    icon: 'text-red-600',    text: 'text-red-600', glow: 'hover:shadow-[0_15px_30px_rgba(224,36,36,0.15)] hover:border-red-500/30' },
+    purple:  { bg: 'bg-purple-50 dark:bg-purple-500/10', icon: 'text-purple-600', text: 'text-purple-600', glow: 'hover:shadow-[0_15px_30px_rgba(147,51,234,0.15)] hover:border-purple-500/30' },
+    orange:  { bg: 'bg-orange-50 dark:bg-orange-500/10', icon: 'text-orange-600', text: 'text-orange-600', glow: 'hover:shadow-[0_15px_30px_rgba(234,88,12,0.15)] hover:border-orange-500/30' },
   }
   const c = colorMap[color] || colorMap.primary
 
   return (
     <motion.div
-      whileHover={{ y: -2 }}
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       onClick={onClick}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: 'preserve-3d',
+        perspective: 1000,
+      }}
+      whileHover={{
+        scale: 1.03,
+        y: -4,
+        z: 15,
+      }}
+      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
       className={cn(
-        'rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 cursor-pointer transition-shadow duration-200 hover:shadow-[var(--shadow-md)]',
+        'rounded-2xl border border-white/20 dark:border-white/5 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-5 cursor-pointer shadow-md relative overflow-hidden transition-all duration-300',
+        c.glow,
         className
       )}
     >
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-sm font-medium text-[var(--color-text-secondary)]">{label}</span>
-        <div className={cn('p-2 rounded-lg', c.bg)}>
-          <span className={c.icon}>{icon}</span>
+      {/* Glow overlay indicator */}
+      <div 
+        className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-white/5 pointer-events-none" 
+        style={{ transform: 'translateZ(5px)' }}
+      />
+      
+      <div className="relative z-10 flex flex-col justify-between h-full" style={{ transform: 'translateZ(20px)' }}>
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-sm font-semibold text-[var(--color-text-secondary)]">{label}</span>
+          <motion.div 
+            whileHover={{ rotate: 15, scale: 1.1 }}
+            className={cn('p-2.5 rounded-xl shadow-sm', c.bg)}
+          >
+            <span className={cn('block w-5 h-5 flex items-center justify-center', c.icon)}>{icon}</span>
+          </motion.div>
+        </div>
+        <div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl font-black text-[var(--color-text-primary)] font-data"
+          >
+            {value}
+          </motion.div>
+          {trendLabel && (
+            <p className="text-xs text-[var(--color-text-muted)] mt-1.5 font-medium">{trendLabel}</p>
+          )}
         </div>
       </div>
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-3xl font-bold text-[var(--color-text-primary)] font-data"
-      >
-        {value}
-      </motion.div>
-      {trendLabel && (
-        <p className="text-xs text-[var(--color-text-muted)] mt-1">{trendLabel}</p>
-      )}
     </motion.div>
   )
 }

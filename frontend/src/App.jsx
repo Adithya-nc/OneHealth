@@ -4,6 +4,7 @@ import { useAuthStore } from './store/authStore'
 import { useUIStore, applyTheme } from './store/uiStore'
 import { AppShell } from './components/layout/AppShell'
 import { Spinner } from './components/ui/index'
+import { ErrorBoundary } from './components/ui/ErrorBoundary'
 
 // Pages
 import Landing from './pages/Landing'
@@ -83,6 +84,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-primary)] font-sans flex flex-col transition-colors duration-300">
+        <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public routes */}
@@ -110,35 +112,17 @@ export default function App() {
 
           {/* Protected app routes */}
           <Route element={<PrivateRoute />}>
-            <Route path="/dashboard" element={<AppShell title="Dashboard" subtitle="Your health at a glance" />}>
-              <Route index element={<Dashboard />} />
-            </Route>
-            <Route path="/passport" element={<AppShell title="Health Passport" subtitle="Your complete medical history" />}>
-              <Route index element={<Passport />} />
-            </Route>
-            <Route path="/symptoms" element={<AppShell title="Symptom Analyzer" subtitle="AI-powered health triage" />}>
-              <Route index element={<SymptomAnalyzer />} />
-            </Route>
-            <Route path="/emergency" element={<AppShell title="Emergency Card" subtitle="Critical information for first responders" />}>
-              <Route index element={<Emergency />} />
-            </Route>
-            <Route path="/reports" element={<AppShell title="Report Analyzer" subtitle="AI analysis of your lab reports" />}>
-              <Route index element={<ReportAnalyzer />} />
-            </Route>
-            <Route path="/medications" element={<AppShell title="Medications" subtitle="Track and manage your prescriptions" />}>
-              <Route index element={<Medications />} />
-            </Route>
-            <Route path="/risk" element={<AppShell title="Risk Prediction" subtitle="AI-driven health risk assessment" />}>
-              <Route index element={<Placeholder name="Risk Prediction" />} />
-            </Route>
-            <Route path="/feedback-analytics" element={<AppShell title="Feedback Analytics" subtitle="AI sentiment analysis" />}>
-              <Route index element={<FeedbackAnalytics />} />
-            </Route>
-            <Route path="/health-report" element={<AppShell title="AI Health Report" subtitle="Generate your comprehensive health report" />}>
-              <Route index element={<HealthReportGenerator />} />
-            </Route>
-            <Route path="/settings" element={<AppShell title="Settings" subtitle="Manage your account and preferences" />}>
-              <Route index element={<Placeholder name="Settings" />} />
+            <Route element={<AppShell />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/passport" element={<Passport />} />
+              <Route path="/symptoms" element={<SymptomAnalyzer />} />
+              <Route path="/emergency" element={<Emergency />} />
+              <Route path="/reports" element={<ReportAnalyzer />} />
+              <Route path="/medications" element={<Medications />} />
+              <Route path="/risk" element={<Placeholder name="Risk Prediction" />} />
+              <Route path="/feedback-analytics" element={<FeedbackAnalytics />} />
+              <Route path="/health-report" element={<HealthReportGenerator />} />
+              <Route path="/settings" element={<Placeholder name="Settings" />} />
             </Route>
           </Route>
 
@@ -146,6 +130,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
       </div>
     </BrowserRouter>
   )

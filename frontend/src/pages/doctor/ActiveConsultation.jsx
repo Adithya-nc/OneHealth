@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   ArrowLeft, 
   Stethoscope, 
@@ -12,7 +12,7 @@ import {
   CalendarDays,
   FileText
 } from 'lucide-react'
-import { Card, Button, Input } from '../../components/ui'
+import { Card, GlassCard, Button, Input } from '../../components/ui'
 import { useConsultationStore } from '../../store/doctorStore'
 
 export function ActiveConsultation() {
@@ -70,7 +70,7 @@ export function ActiveConsultation() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Diagnosis & Symptoms */}
-          <Card className="p-6 border-0 shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
+          <GlassCard className="p-6">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Diagnosis & Symptoms</h3>
             
             <div className="space-y-5">
@@ -115,18 +115,25 @@ export function ActiveConsultation() {
               </div>
               
               {/* Symptom Chips */}
-              {store.symptoms.length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2">
+                <AnimatePresence>
                   {store.symptoms.map(sym => (
-                    <span key={sym} className="px-3 py-1 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 rounded-full text-sm font-medium flex items-center gap-1 border border-indigo-100 dark:border-indigo-500/20">
+                    <motion.span 
+                      key={sym} 
+                      initial={{ opacity: 0, scale: 0.8 }} 
+                      animate={{ opacity: 1, scale: 1 }} 
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      layout
+                      className="px-3 py-1 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 rounded-full text-sm font-medium flex items-center gap-1 border border-indigo-100 dark:border-indigo-500/20"
+                    >
                       {sym}
                       <button type="button" onClick={() => store.removeSymptom(sym)} className="hover:text-red-500 transition-colors">
                         <Trash2 className="w-3 h-3 ml-1" />
                       </button>
-                    </span>
+                    </motion.span>
                   ))}
-                </div>
-              )}
+                </AnimatePresence>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Raw Doctor Notes</label>
@@ -138,10 +145,10 @@ export function ActiveConsultation() {
                 ></textarea>
               </div>
             </div>
-          </Card>
+          </GlassCard>
 
           {/* Prescription Builder */}
-          <Card className="p-6 border-0 shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
+          <GlassCard className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Pill className="w-5 h-5 text-emerald-500" /> Prescription Builder
@@ -157,31 +164,36 @@ export function ActiveConsultation() {
               </div>
             ) : (
               <div className="space-y-4">
-                {store.prescriptions.map((med, idx) => (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    key={idx} 
-                    className="flex flex-col sm:flex-row gap-3 items-end p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 flex-1 w-full">
-                      <div className="sm:col-span-2">
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Medicine Name</label>
-                        <Input placeholder="e.g. Amoxicillin" defaultValue={med.name} className="h-9 text-sm bg-white dark:bg-slate-900" />
+                <AnimatePresence>
+                  {store.prescriptions.map((med, idx) => (
+                    <motion.div 
+                      key={idx} 
+                      initial={{ opacity: 0, y: 15, scale: 0.95 }} 
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -15, scale: 0.95 }}
+                      layout
+                      className="flex flex-col sm:flex-row gap-3 items-end p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 flex-1 w-full">
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-medium text-slate-500 mb-1">Medicine Name</label>
+                          <Input placeholder="e.g. Amoxicillin" defaultValue={med.name} className="h-9 text-sm bg-white dark:bg-slate-900" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-500 mb-1">Dosage</label>
+                          <Input placeholder="500mg" defaultValue={med.dosage} className="h-9 text-sm bg-white dark:bg-slate-900" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-500 mb-1">Frequency</label>
+                          <Input placeholder="1-0-1" defaultValue={med.freq} className="h-9 text-sm bg-white dark:bg-slate-900" />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Dosage</label>
-                        <Input placeholder="500mg" defaultValue={med.dosage} className="h-9 text-sm bg-white dark:bg-slate-900" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Frequency</label>
-                        <Input placeholder="1-0-1" defaultValue={med.freq} className="h-9 text-sm bg-white dark:bg-slate-900" />
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 shrink-0" onClick={() => store.removePrescription(idx)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </motion.div>
-                ))}
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 shrink-0" onClick={() => store.removePrescription(idx)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             )}
             
@@ -191,7 +203,7 @@ export function ActiveConsultation() {
               </Button>
               <Button variant="outline" className="flex-1 sm:flex-none">Save to Passport</Button>
             </div>
-          </Card>
+          </GlassCard>
 
         </div>
 
@@ -199,48 +211,73 @@ export function ActiveConsultation() {
         <div className="space-y-6">
           
           {/* AI Consultation Summary */}
-          <Card className="p-0 border border-indigo-100 dark:border-indigo-900/50 shadow-lg shadow-indigo-500/5 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden relative">
+          <GlassCard className="p-0 overflow-hidden relative border border-indigo-100 dark:border-indigo-900/50 shadow-lg shadow-indigo-500/5">
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-2xl rounded-full"></div>
             
             <div className="p-6">
               <h3 className="text-lg font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-2 mb-2">
-                <Sparkles className="w-5 h-5" /> AI Summary
+                <Sparkles className="w-5 h-5 animate-pulse" /> AI Summary
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Convert your raw notes into a structured medical record automatically.</p>
               
               {!store.aiSummary ? (
-                <Button 
-                  onClick={handleGenerateSummary}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/20 transition-all"
+                <motion.div
+                  animate={{
+                    boxShadow: ["0 0 0 0 rgba(99, 102, 241, 0.4)", "0 0 0 10px rgba(99, 102, 241, 0)", "0 0 0 0 rgba(99, 102, 241, 0)"]
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 2,
+                    ease: "easeInOut"
+                  }}
+                  className="rounded-xl overflow-hidden"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" /> Generate Structure
-                </Button>
+                  <Button 
+                    onClick={handleGenerateSummary}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/20 transition-all"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" /> Generate Structure
+                  </Button>
+                </motion.div>
               ) : (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                  <div className="p-4 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800/50 space-y-3">
-                    <div>
-                      <span className="text-xs font-bold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider">Computed Diagnosis</span>
+                  <motion.div 
+                    variants={{
+                      hidden: { opacity: 0 },
+                      show: {
+                        opacity: 1,
+                        transition: {
+                          staggerChildren: 0.15
+                        }
+                      }
+                    }}
+                    initial="hidden"
+                    animate="show"
+                    className="p-4 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800/50 space-y-3"
+                  >
+                    <motion.div variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }}>
+                      <span className="text-xs font-bold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider font-sans">Computed Diagnosis</span>
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">{store.aiSummary.diagnosis}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider">Risk Level</span>
+                    </motion.div>
+                    <motion.div variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }}>
+                      <span className="text-xs font-bold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider font-sans">Risk Level</span>
                       <p className="text-sm font-semibold text-amber-600">{store.aiSummary.risk}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider">Suggested Treatment</span>
+                    </motion.div>
+                    <motion.div variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }}>
+                      <span className="text-xs font-bold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider font-sans">Suggested Treatment</span>
                       <p className="text-sm text-slate-700 dark:text-slate-300">{store.aiSummary.treatment}</p>
-                    </div>
-                  </div>
+                    </motion.div>
+                  </motion.div>
                   <Button variant="outline" className="w-full text-indigo-600 border-indigo-200 dark:text-indigo-400 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30" onClick={() => store.updateDiagnosisField('aiSummary', null)}>
                     Regenerate
                   </Button>
                 </motion.div>
               )}
             </div>
-          </Card>
+          </GlassCard>
 
           {/* Follow Up */}
-          <Card className="p-6 border-0 shadow-sm bg-white dark:bg-slate-900 rounded-2xl">
+          <GlassCard className="p-6">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
               <CalendarDays className="w-5 h-5 text-blue-600" /> Follow-Up Plan
             </h3>
@@ -255,7 +292,7 @@ export function ActiveConsultation() {
                 <Input placeholder="e.g. Complete Blood Count" className="bg-slate-50 dark:bg-slate-800" />
               </div>
             </div>
-          </Card>
+          </GlassCard>
 
         </div>
       </div>

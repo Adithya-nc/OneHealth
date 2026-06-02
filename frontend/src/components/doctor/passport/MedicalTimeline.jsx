@@ -79,9 +79,14 @@ export function MedicalTimeline() {
         {TIMELINE_DATA.map((item, index) => (
           <motion.div 
             key={item.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
+            initial={{ opacity: 0, x: -30, y: 15 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            transition={{ 
+              type: 'spring', 
+              stiffness: 90, 
+              damping: 12, 
+              delay: index * 0.12 
+            }}
             className="relative sm:flex items-start group"
           >
             {/* Date (Desktop) */}
@@ -96,7 +101,15 @@ export function MedicalTimeline() {
 
             {/* Content Card */}
             <div className="ml-12 sm:ml-6 flex-1">
-              <div className="bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 transition-colors shadow-sm cursor-pointer">
+              <motion.div
+                whileHover={{
+                  scale: 1.02,
+                  translateY: -3,
+                  boxShadow: "0 20px 40px rgba(59, 130, 246, 0.1)"
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="bg-white/55 hover:bg-white/80 dark:bg-slate-900/55 dark:hover:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 border border-slate-200/50 dark:border-slate-800/50 transition-colors shadow-sm cursor-pointer relative overflow-hidden"
+              >
                 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
                   <div className="flex items-center gap-2">
@@ -113,7 +126,7 @@ export function MedicalTimeline() {
                 <div className="mt-4 flex items-center gap-1 text-xs font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
                   View Details <ChevronDown className="w-3 h-3" />
                 </div>
-              </div>
+              </motion.div>
             </div>
 
           </motion.div>

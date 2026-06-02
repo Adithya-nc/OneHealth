@@ -83,11 +83,24 @@ const MOCK_TRENDS = {
 }
 
 export const useRecordsStore = create((set, get) => ({
-  records: MOCK_RECORDS,
-  trends: MOCK_TRENDS,
+  records: [], // Default to empty array, will fetch from backend
+  trends: MOCK_TRENDS, // Keep mock trends for UI demo until API is built for it
   activeFilter: 'all',
   searchQuery: '',
   isLoading: false,
+
+  fetchRecords: async () => {
+    set({ isLoading: true })
+    try {
+      const { default: api } = await import('../services/api')
+      const response = await api.get('/patients/timeline')
+      set({ records: response.data.entries, isLoading: false })
+    } catch (error) {
+      console.error('Failed to fetch records:', error)
+      // Fallback to mock records if backend is unreachable
+      set({ records: MOCK_RECORDS, isLoading: false })
+    }
+  },
 
   setFilter: (filter) => set({ activeFilter: filter }),
   setSearch: (q) => set({ searchQuery: q }),

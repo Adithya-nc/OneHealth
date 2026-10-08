@@ -8,7 +8,6 @@ export const useUIStore = create(
       sidebarCollapsed: false,
       activeModal: null,     // string id of open modal
       toasts: [],
-      notificationCount: 3,
 
       setTheme: (theme) => {
         set({ theme })
@@ -25,7 +24,6 @@ export const useUIStore = create(
         setTimeout(() => get().removeToast(id), toast.duration || 4000)
       },
       removeToast: (id) => set((s) => ({ toasts: s.toasts.filter(t => t.id !== id) })),
-      setNotificationCount: (n) => set({ notificationCount: n }),
     }),
     { name: 'onehealth-ui', partialize: (s) => ({ theme: s.theme, sidebarCollapsed: s.sidebarCollapsed }) }
   )

@@ -34,7 +34,7 @@ function CountUp({ value, suffix = '', duration = 2000 }) {
     if (!inView) return
     let start = 0
     const val = parseFloat(value)
-    if (isNaN(val)) { setCount(value); return }
+    if (isNaN(val)) { setTimeout(() => setCount(value), 0); return }
     const step = val / (duration / 16)
     const timer = setInterval(() => {
       start += step

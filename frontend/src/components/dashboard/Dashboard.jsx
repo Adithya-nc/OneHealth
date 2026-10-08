@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 import { useUserStore } from '../../store/userStore'
 import { useRecordsStore } from '../../store/recordsStore'
+import { useMedicationStore } from '../../store/medicationStore'
 import { StatCard, Avatar, ProgressBar, Alert, EmptyState, GlassCard } from '../ui/index'
 import { Button } from '../ui/Button'
 import { RecordTypeBadge } from '../ui/Badge'
@@ -372,11 +373,18 @@ export default function Dashboard() {
   
   const trends = useRecordsStore(s => s.trends)
   const fetchRecords = useRecordsStore(s => s.fetchRecords)
+
+  const medications = useMedicationStore(s => s.medications)
+  const markTaken = useMedicationStore(s => s.markTaken)
+  const undoTaken = useMedicationStore(s => s.undoTaken)
+  const getTodaysAdherence = useMedicationStore(s => s.getTodaysAdherence)
+  const fetchMedications = useMedicationStore(s => s.fetchMedications)
   
   useEffect(() => {
     fetchProfile()
     fetchRecords()
-  }, [fetchProfile, fetchRecords])
+    fetchMedications()
+  }, [fetchProfile, fetchRecords, fetchMedications])
   
   const [trendType, setTrendType] = useState('bloodSugar')
   const [trendRange, setTrendRange] = useState('monthly') // weekly | monthly | yearly
@@ -591,11 +599,12 @@ export default function Dashboard() {
               <h3 className="text-base font-black text-[var(--color-text-primary)] mb-3 uppercase tracking-wider pl-1">
                 Quick Actions
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 <PremiumQuickAction icon={Upload} label="Upload Report" desc="Add to Health Passport" to="/passport" color="success" />
                 <PremiumQuickAction icon={Stethoscope} label="Analyze Symptoms" desc="AI clinical triage" to="/symptoms" color="primary" />
-                <PremiumQuickAction icon={AlertTriangle} label="Emergency Card" desc="Crisis first responder info" to="/emergency" color="danger" />
-                <PremiumQuickAction icon={Calendar} label="Book Clinic" desc="Schedule follow-up" to="/passport" color="warning" />
+                <PremiumQuickAction icon={Activity} label="Risk Prediction" desc="Biometric risk model" to="/risk" color="danger" />
+                <PremiumQuickAction icon={AlertTriangle} label="Emergency Card" desc="Crisis first responder info" to="/emergency" color="warning" />
+                <PremiumQuickAction icon={Calendar} label="Book Clinic" desc="Schedule follow-up" to="/passport" color="primary" />
                 <PremiumQuickAction icon={FileText} label="Generate AI Report" desc="Get medical dossier" to="/health-report" color="purple" />
               </div>
             </div>
@@ -609,35 +618,72 @@ export default function Dashboard() {
             {/* Journey Timeline */}
             <HealthcareJourneyTimeline />
 
-            {/* Medications Reminder log */}
+            {/* Medications Reminder log connected to Store */}
             <GlassCard className="p-5 shadow-lg">
-              <div className="flex items-center gap-2 mb-3">
-                <Clock size={16} className="text-[var(--color-primary)]" />
-                <h3 className="text-sm font-bold text-[var(--color-text-primary)]">Today's Medications</h3>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Clock size={16} className="text-[var(--color-primary)]" />
+                  <h3 className="text-sm font-bold text-[var(--color-text-primary)]">Today's Medications</h3>
+                </div>
+                <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-200/40">
+                  {getTodaysAdherence()}% Adherence
+                </span>
               </div>
               <div className="space-y-2.5">
-                {[
-                  { name: 'Salbutamol 100mcg', time: '08:00 AM', taken: true },
-                  { name: 'Amlodipine 5mg',    time: '09:00 AM', taken: false },
-                ].map((med, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-2)]/60 border border-[var(--color-border)]/50">
-                    <div>
-                      <p className="text-xs font-bold text-[var(--color-text-primary)]">{med.name}</p>
-                      <p className="text-[10px] text-[var(--color-text-muted)] font-semibold mt-0.5">{med.time}</p>
+                {medications.filter(m => m.status === 'active').slice(0, 4).map((med) => (
+                  <div key={med.id} className="flex items-center justify-between p-3 rounded-xl bg-[var(--color-surface-2)]/60 border border-[var(--color-border)]/50">
+                    <div className="flex-1 min-w-0 pr-2">
+                      <p className="text-xs font-bold text-[var(--color-text-primary)] truncate">{med.name}</p>
+                      <p className="text-[10px] text-[var(--color-text-muted)] font-semibold mt-0.5">
+                        {med.timing?.[0] || 'Scheduled daily'} · {med.dosage}
+                      </p>
                     </div>
-                    <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
-                      med.taken 
-                        ? 'bg-emerald-50/50 border-emerald-250 text-emerald-700 dark:text-emerald-450 dark:bg-emerald-500/5' 
-                        : 'bg-amber-50/50 border-amber-250 text-amber-750 dark:text-amber-400 dark:bg-amber-500/5'
-                    }`}>
-                      {med.taken ? 'Taken' : 'Pending'}
-                    </span>
+                    <button
+                      onClick={() => med.taken_today ? undoTaken(med.id) : markTaken(med.id)}
+                      title={med.taken_today ? 'Click to undo' : 'Click to mark as taken'}
+                      className={`text-[10px] font-black px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                        med.taken_today 
+                          ? 'bg-emerald-50/80 border-emerald-300 text-emerald-700 dark:text-emerald-400 dark:bg-emerald-500/10 hover:bg-emerald-100' 
+                          : 'bg-amber-50/80 border-amber-300 text-amber-700 dark:text-amber-400 dark:bg-amber-500/10 hover:bg-amber-100'
+                      }`}
+                    >
+                      {med.taken_today ? '✓ Taken' : '○ Pending'}
+                    </button>
                   </div>
                 ))}
               </div>
               <Link to="/medications" className="mt-4 flex items-center gap-1 text-xs text-[var(--color-primary)] font-bold hover:underline pl-1">
                 Manage all medications <ChevronRight size={12} />
               </Link>
+            </GlassCard>
+
+            {/* Preventive Care Tracker Card */}
+            <GlassCard className="p-5 shadow-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <ShieldCheck size={16} className="text-emerald-600" />
+                <h3 className="text-sm font-bold text-[var(--color-text-primary)]">Preventive Care Tracker</h3>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { title: 'Annual Fasting Blood Panel', due: 'Completed (Mar 2026)', status: 'done' },
+                  { title: 'Dental Prophylaxis Check', due: 'Due in 3 months', status: 'upcoming' },
+                  { title: 'Respiratory Peak-Flow Review', due: 'Scheduled (Aug 2026)', status: 'upcoming' },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-[var(--color-surface-2)]/40 border border-[var(--color-border)]/40 text-xs">
+                    <div>
+                      <p className="font-bold text-[var(--color-text-primary)]">{item.title}</p>
+                      <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{item.due}</p>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      item.status === 'done' 
+                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' 
+                        : 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+                    }`}>
+                      {item.status === 'done' ? 'Recorded' : 'Active'}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </GlassCard>
 
             {/* Visit feedback stars */}

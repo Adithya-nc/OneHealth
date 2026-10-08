@@ -18,6 +18,8 @@ import ReportAnalyzer from './components/reports/ReportAnalyzer'
 import Medications from './components/medications/Medications'
 import FeedbackAnalytics from './components/dashboard/FeedbackAnalytics'
 import HealthReportGenerator from './components/dashboard/HealthReportGenerator'
+import Settings from './pages/Settings'
+import RiskPrediction from './pages/RiskPrediction'
 
 // Doctor Portal
 import { DoctorLayout } from './components/doctor/layout/DoctorLayout'
@@ -40,7 +42,12 @@ function PageLoader() {
 
 // Route guard — redirect to /login if not authenticated
 function PrivateRoute() {
-  // For demo: always allow access (mock user is pre-loaded in store)
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated)
+  const user = useAuthStore(s => s.user)
+  // In demo/mock mode the user object is set on login; allow access if set
+  if (!isAuthenticated && !user) {
+    return <Navigate to="/login" replace />
+  }
   return <Outlet />
 }
 
@@ -119,10 +126,10 @@ export default function App() {
               <Route path="/emergency" element={<Emergency />} />
               <Route path="/reports" element={<ReportAnalyzer />} />
               <Route path="/medications" element={<Medications />} />
-              <Route path="/risk" element={<Placeholder name="Risk Prediction" />} />
+              <Route path="/risk" element={<RiskPrediction />} />
               <Route path="/feedback-analytics" element={<FeedbackAnalytics />} />
               <Route path="/health-report" element={<HealthReportGenerator />} />
-              <Route path="/settings" element={<Placeholder name="Settings" />} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
           </Route>
 

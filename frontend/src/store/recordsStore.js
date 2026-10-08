@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import api from '../services/api'
 
 const MOCK_RECORDS = [
   {
@@ -83,8 +84,8 @@ const MOCK_TRENDS = {
 }
 
 export const useRecordsStore = create((set, get) => ({
-  records: [], // Default to empty array, will fetch from backend
-  trends: MOCK_TRENDS, // Keep mock trends for UI demo until API is built for it
+  records: MOCK_RECORDS, // Start with mock data; replaced by backend data when available
+  trends: MOCK_TRENDS,
   activeFilter: 'all',
   searchQuery: '',
   isLoading: false,
@@ -92,12 +93,14 @@ export const useRecordsStore = create((set, get) => ({
   fetchRecords: async () => {
     set({ isLoading: true })
     try {
-      const { default: api } = await import('../services/api')
       const response = await api.get('/patients/timeline')
-      set({ records: response.data.entries, isLoading: false })
+      if (response.data.entries && response.data.entries.length > 0) {
+        set({ records: response.data.entries, isLoading: false })
+      } else {
+        set({ records: MOCK_RECORDS, isLoading: false })
+      }
     } catch (error) {
-      console.error('Failed to fetch records:', error)
-      // Fallback to mock records if backend is unreachable
+      console.error('Failed to fetch records — using mock data:', error)
       set({ records: MOCK_RECORDS, isLoading: false })
     }
   },

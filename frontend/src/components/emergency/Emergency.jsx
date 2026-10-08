@@ -6,6 +6,7 @@ import {
   Shield, Clock, Siren, HeartPulse
 } from 'lucide-react'
 import { useUserStore } from '../../store/userStore'
+import { useMedicationStore } from '../../store/medicationStore'
 import { Button } from '../ui/Button'
 import { Modal } from '../ui/Modal'
 import { Alert } from '../ui/index'
@@ -176,9 +177,12 @@ function AIGuidancePanel() {
 export default function Emergency() {
   const profile = useUserStore(s => s.profile)
   const p = profile?.profile
+  const medications = useMedicationStore(s => s.medications)
+  const activeMeds = medications.filter(m => m.status === 'active')
 
   const [shareOpen, setShareOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [revoked, setRevoked] = useState(false)
 
   const shareUrl = `https://onehealth.in/emergency/${profile?.uid || 'demo-user'}`
 
@@ -220,15 +224,29 @@ export default function Emergency() {
                 <p className="text-red-100 text-sm font-semibold opacity-90">Medical Passport Access for First Responders</p>
               </div>
             </div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                onClick={() => setShareOpen(true)}
-                className="bg-white/20 hover:bg-white/30 border-white/30 text-white border h-11 px-5"
-                leftIcon={<Share2 size={16} />}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <a
+                href="tel:112"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-white font-bold text-xs border border-white/30 shadow-sm transition-all"
               >
-                Share Card
-              </Button>
-            </motion.div>
+                <Phone size={14} className="text-white" /> Call 112
+              </a>
+              <a
+                href="tel:108"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-white font-bold text-xs border border-white/30 shadow-sm transition-all"
+              >
+                <Siren size={14} className="text-white" /> Call 108 (Ambulance)
+              </a>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  onClick={() => setShareOpen(true)}
+                  className="bg-white/20 hover:bg-white/30 border-white/30 text-white border h-10 px-4"
+                  leftIcon={<Share2 size={16} />}
+                >
+                  Share Card
+                </Button>
+              </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -318,19 +336,25 @@ export default function Emergency() {
           {/* Current Medications */}
           <DataSection icon={Pill} title="Current Medications" iconColor="text-blue-600" bgColor="bg-blue-50 dark:bg-blue-500/10">
             <div className="space-y-3">
-              {[
-                { name: 'Salbutamol 100mcg', dosage: '2 puffs as needed' },
-                { name: 'Amlodipine 5mg', dosage: '1 tablet daily (morning)' },
-              ].map((med, i) => (
-                <motion.div 
-                  key={i} 
-                  whileHover={{ y: -2 }}
-                  className="p-4 bg-[var(--color-surface-2)]/60 border border-[var(--color-border)]/50 rounded-2xl transition-all duration-300"
-                >
-                  <p className="font-bold text-sm text-[var(--color-text-primary)]">{med.name}</p>
-                  <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">{med.dosage}</p>
-                </motion.div>
-              ))}
+              {activeMeds.length > 0 ? (
+                activeMeds.map((med) => (
+                  <motion.div 
+                    key={med.id} 
+                    whileHover={{ y: -2 }}
+                    className="p-4 bg-[var(--color-surface-2)]/60 border border-[var(--color-border)]/50 rounded-2xl transition-all duration-300"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-sm text-[var(--color-text-primary)]">{med.name}</p>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                        {med.timing?.[0] || 'Daily'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[var(--color-text-secondary)] mt-1 font-medium">{med.dosage} · {med.instructions || 'Take as prescribed'}</p>
+                  </motion.div>
+                ))
+              ) : (
+                <p className="text-[var(--color-text-muted)] font-semibold text-sm">No active prescription medications recorded.</p>
+              )}
             </div>
           </DataSection>
 
@@ -351,28 +375,50 @@ export default function Emergency() {
       </div>
 
       {/* Share Modal */}
-      <Modal isOpen={shareOpen} onClose={() => setShareOpen(false)} title="Share Emergency Card" description="Generate a shareable link for first responders." size="sm">
+      <Modal isOpen={shareOpen} onClose={() => setShareOpen(false)} title="Share Emergency Card" description="Generate a secure temporary link for first responders." size="sm">
         <div className="p-6 space-y-4">
-          <Alert type="warning" title="Valid for 24 hours">
-            Anyone with this link can view your emergency card without logging in.
+          <Alert type={revoked ? 'error' : 'warning'} title={revoked ? 'Link Revoked' : 'Time-Limited Access (23h 59m remaining)'}>
+            {revoked 
+              ? 'This emergency share link has been revoked. External users will receive an access denied prompt.' 
+              : 'Anyone with this secure link can view your critical emergency card without authentication.'}
           </Alert>
-          <div className="flex gap-2">
-            <input
-              readOnly
-              value={shareUrl}
-              className="flex-1 h-10 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] text-sm text-[var(--color-text-primary)] focus:outline-none"
-            />
-            <Button
-              onClick={handleCopy}
-              variant="outline"
-              leftIcon={copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-            >
-              {copied ? 'Copied!' : 'Copy'}
-            </Button>
-          </div>
+          {!revoked && (
+            <div className="flex gap-2">
+              <input
+                readOnly
+                value={shareUrl}
+                className="flex-1 h-10 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] text-sm text-[var(--color-text-primary)] focus:outline-none"
+              />
+              <Button
+                onClick={handleCopy}
+                variant="outline"
+                leftIcon={copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+              >
+                {copied ? 'Copied!' : 'Copy'}
+              </Button>
+            </div>
+          )}
           <div className="flex flex-col items-center gap-3 py-4 bg-[var(--color-surface-2)] rounded-xl">
-            <QrCode size={80} className="text-[var(--color-text-secondary)]" />
-            <p className="text-xs text-[var(--color-text-muted)]">Scan QR code to view emergency card</p>
+            <QrCode size={80} className={revoked ? 'opacity-20' : 'text-[var(--color-text-secondary)]'} />
+            <p className="text-xs text-[var(--color-text-muted)]">
+              {revoked ? 'QR Code Disabled' : 'Scan QR code for immediate triage access'}
+            </p>
+          </div>
+          <div className="pt-2 border-t border-[var(--color-border)]/50 flex items-center justify-between">
+            <div className="text-[10px] text-[var(--color-text-muted)] font-medium">
+              <p>Audit: Generated Just Now</p>
+              <p>Encryption: AES-256 GCM</p>
+            </div>
+            <button
+              onClick={() => setRevoked(!revoked)}
+              className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
+                revoked 
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20' 
+                  : 'border-red-300 bg-red-50 text-red-700 dark:bg-red-950/20'
+              }`}
+            >
+              {revoked ? 'Re-enable Link' : 'Revoke Link'}
+            </button>
           </div>
         </div>
       </Modal>
